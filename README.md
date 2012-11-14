@@ -5,6 +5,7 @@ A simple command line program (for any platform using either Microsoft .NET or m
 
 Usage
 -----
+
 srtDownload has a couple of options when you use it from the command line:
 
  Usage: srtDownload.exe [options...] <directory>
@@ -25,6 +26,7 @@ select what language(s) to download. Let me know if you would like that.
 
 SubtitleDownloader.dll
 ----------------------
+
 Subtitle downloader uses the scraper library created by sekotin, which can be found at 
 https://www.assembla.com/spaces/subtitledownloader/wiki. If you use this program, you should go
 make a donation to him, since this program would not be possible without it.
