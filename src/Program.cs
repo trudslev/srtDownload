@@ -25,13 +25,9 @@ namespace srtDownload
 
 		static void Main(string[] args)
 		{
-			downloaders = new List<ISubtitleDownloader>()
-			{
-				new SubsceneDownloader(),
-				new BierdopjeDownloader(),
-				new PodnapisiDownloader(),
-				new OpenSubtitlesDownloader()
-			};
+			downloaders = new List<ISubtitleDownloader>();
+			foreach (string dl in SubtitleDownloaderFactory.GetSubtitleDownloaderNames())
+				downloaders.Add(SubtitleDownloaderFactory.GetSubtitleDownloader(dl));
 
 			var arguments = new List<string>();
 			bool grabStateName = false;
@@ -59,11 +55,10 @@ namespace srtDownload
 				}
 				else if (grabDownloaders)
 				{
-					var dls = ISubtitleDownloaderList.GetSubtitleDownloaders();
 					downloaders.Clear();
 					foreach (string downloader in arg.Split(','))
 					{
-						var dl = dls.GetSubtitleDownloader(downloader);
+						var dl = SubtitleDownloaderFactory.GetSubtitleDownloader(downloader);
 						if (dl != null)
 							downloaders.Add(dl);
 						else
@@ -181,8 +176,8 @@ namespace srtDownload
 					break;
 				case HelpContext.Downloaders:
 					Console.WriteLine("The following subtitle downloaders are available:");
-					foreach (ISubtitleDownloader dl in ISubtitleDownloaderList.GetSubtitleDownloaders())
-						Console.WriteLine(dl.GetName());
+					foreach (string dl in SubtitleDownloaderFactory.GetSubtitleDownloaderNames())
+						Console.WriteLine(dl);
 					break;
 				case HelpContext.Languages:
 					Console.WriteLine("The following languages are possible:");
