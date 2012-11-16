@@ -1,27 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using SubtitleDownloader.Core;
-using SubtitleDownloader.Implementations.OpenSubtitles;
-using SubtitleDownloader.Implementations.Bierdopje;
-using SubtitleDownloader.Implementations.Subscene;
-using SubtitleDownloader.Implementations.Podnapisi;
-using System.Text.RegularExpressions;
 using System.IO;
-using SubtitleDownloader.Util;
+using System.Text.RegularExpressions;
 using System.Xml.Serialization;
+using SubtitleDownloader.Core;
+using SubtitleDownloader.Implementations.Bierdopje;
+using SubtitleDownloader.Implementations.OpenSubtitles;
+using SubtitleDownloader.Implementations.Podnapisi;
+using SubtitleDownloader.Implementations.Subscene;
 
 namespace srtDownload
 {
 	class Program
 	{
+		private enum HelpContext { Usage, Downloaders, Languages };
 		static List<ISubtitleDownloader> downloaders;
 		static Dictionary<string, string> ignoreShows = new Dictionary<string, string>();
 		static bool Verbose = false;
 		static SubtitleState state;
 		static string stateFileName = "srtDownload.xml";
 		static string ignoreFileName = null;
+		static string language = "eng";
 		static int giveUpDays = 7;
 
 		static void Main(string[] args)
@@ -34,15 +33,13 @@ namespace srtDownload
 				new OpenSubtitlesDownloader()
 			};
 
-			if (args.Length == 0)
-			{
-				ShowHelp();
-				return;
-			}
 			var arguments = new List<string>();
 			bool grabStateName = false;
 			bool grabIgnoreName = false;
 			bool grabGiveUpDays = false;
+			bool grabLanguage = false;
+			bool grabDownloaders = false;
+			bool checkHelpParameter = false;
 			foreach (string arg in args)
 			{
 				if (grabStateName)
@@ -55,6 +52,25 @@ namespace srtDownload
 					ignoreFileName = arg;
 					grabIgnoreName = false;
 				}
+				else if (grabLanguage)
+				{
+					language = arg;
+					grabLanguage = false;
+				}
+				else if (grabDownloaders)
+				{
+					var dls = ISubtitleDownloaderList.GetSubtitleDownloaders();
+					downloaders.Clear();
+					foreach (string downloader in arg.Split(','))
+					{
+						var dl = dls.GetSubtitleDownloader(downloader);
+						if (dl != null)
+							downloaders.Add(dl);
+						else
+							Console.WriteLine("\"{0}\" is not a known subtitle downloader.", downloader);
+					}
+					grabDownloaders = false;
+				}
 				else if (grabGiveUpDays)
 				{
 					if (!int.TryParse(arg, out giveUpDays))
@@ -62,6 +78,19 @@ namespace srtDownload
 						Console.WriteLine("Give up days is not an integer. Using default.");
 						giveUpDays = 7;
 					}
+				}
+				else if (checkHelpParameter)
+				{
+					switch (arg)
+					{
+						case "downloaders":
+							ShowHelp(HelpContext.Downloaders);
+							break;
+						case "languages":
+							ShowHelp(HelpContext.Languages);
+							break;
+					}
+					checkHelpParameter = false;
 				}
 				else if (arg.StartsWith("-"))
 				{
@@ -73,15 +102,18 @@ namespace srtDownload
 						grabIgnoreName = true;
 					if (arg == "-g" || arg == "--giveupdays")
 						grabGiveUpDays = true;
+					if (arg == "-l" || arg == "--language")
+						grabLanguage = true;
+					if (arg == "-d" || arg == "--downloaders")
+						grabDownloaders = true;
 					if (arg == "-h" || arg == "--help")
-					{
-						ShowHelp();
-						return;
-					}
+						checkHelpParameter = true;
 				}
 				else
 					arguments.Add(arg);
 			}
+			if (checkHelpParameter)
+				ShowHelp();
 
 			if (ignoreFileName != null)
 			{
@@ -98,12 +130,6 @@ namespace srtDownload
 				}
 				Log("Ignore shows file loaded. {0} shows ignored.", ignoreShows.Keys.Count);
 			}
-
-			/*string curDir = Directory.GetCurrentDirectory();
-			Directory.SetCurrentDirectory("//172.16.22.2/series/Series/");
-			arguments.Add("Jimmy.Fallon.2012.10.29.Seth.Meyers.HDTV.XviD-AFG.avi");
-			arguments.Add("Boston.Legal.S03.AC3.DVDRip.XviD-WAT");
-			arguments.Add("Who.Do.You.Think.You.Are.US.S01E02.Emmitt.Smith.HDTV.XviD-FQM.avi");*/
 
 			LoadState();
 
@@ -129,24 +155,54 @@ namespace srtDownload
 			foreach (string key in removeKeys)
 				dict.Remove(key);
 
-			//Directory.SetCurrentDirectory(curDir);
 			SaveState();
 		}
 
-		static void ShowHelp()
+		static void ShowHelp(HelpContext context = HelpContext.Usage)
 		{
-			Console.WriteLine("Usage: srtDownload.exe [options...] <directory>");
-			Console.WriteLine("Options:");
-			Console.WriteLine(" -v, --verbose    Shows more information, otherwise nothing is output (cron");
-			Console.WriteLine("                  mode)");
-			Console.WriteLine(" -s, --state      Path of state file (remembers when files were scanned)");
-			Console.WriteLine(" -g, --giveupdays The number of days after which the program gives up getting");
-			Console.WriteLine("                  the subtitle and writes a .nosrt file.");
-			Console.WriteLine(" -i, --ignore     Path of file containing ignored shows.");
-			Console.WriteLine("                  A text file with a show name on each line. The name is the");
-			Console.WriteLine("                  part of the the filename up to the season/episode id.");
-			Console.WriteLine("                  E.g. \"Criminal.Minds.S08E07.HDTV.x264-LOL.mp4\" will be ");
-			Console.WriteLine("                  ignored with a line of \"Criminal Minds\" in the file.");
+			switch (context)
+			{
+				case HelpContext.Usage:
+					Console.WriteLine("Usage: srtDownload.exe [options...] <directory>");
+					Console.WriteLine("Options:");
+					Console.WriteLine(" -v, --verbose     Shows more information, otherwise nothing is output (cron");
+					Console.WriteLine("                   mode)");
+					Console.WriteLine(" -s, --state       Path of state file (remembers when files were scanned)");
+					Console.WriteLine(" -g, --giveupdays  The number of days after which the program gives up getting");
+					Console.WriteLine("                   the subtitle and writes a .nosrt file.");
+					Console.WriteLine(" -l, --language    The subtitle language requested (defaults to \"eng\").");
+					Console.WriteLine(" -d, --downloaders Comma-separated list of downloaders to use.");
+					Console.WriteLine(" -i, --ignore      Path of file containing ignored shows.");
+					Console.WriteLine("                   A text file with a show name on each line. The name is the");
+					Console.WriteLine("                   part of the the filename up to the season/episode id.");
+					Console.WriteLine("                   E.g. \"Criminal.Minds.S08E07.HDTV.x264-LOL.mp4\" will be ");
+					Console.WriteLine("                   ignored with a line of \"Criminal Minds\" in the file.");
+					Console.WriteLine(" -h, --help        [|downloaders|languages] Show Help.");
+					break;
+				case HelpContext.Downloaders:
+					Console.WriteLine("The following subtitle downloaders are available:");
+					foreach (ISubtitleDownloader dl in ISubtitleDownloaderList.GetSubtitleDownloaders())
+						Console.WriteLine(dl.GetName());
+					break;
+				case HelpContext.Languages:
+					Console.WriteLine("The following languages are possible:");
+					Console.WriteLine("alb Albanian    fre French      nor Norwegian");
+					Console.WriteLine("ara Arabic      ger German      per Persian");
+					Console.WriteLine("bel Belarusian  gre Greek       pol Polish");
+					Console.WriteLine("bos Bosnian     heb Hebrew      por Portuguese");
+					Console.WriteLine("bul Bulgarian   hin Hindi       rum Romanian");
+					Console.WriteLine("cat Catalan     hun Hungarian   rus Russian");
+					Console.WriteLine("chi Chinese     ice Icelandic   srp Serbian");
+					Console.WriteLine("hrv Croatian    ind Indonesian  slo Slovak");
+					Console.WriteLine("cze Czech       gle Irish       slv Slovenian");
+					Console.WriteLine("dan Danish      ita Italian     spa Spanish");
+					Console.WriteLine("nld Dutch       jpn Japanese    swe Swedish");
+					Console.WriteLine("dut Dutch       kor Korean      tha Thai");
+					Console.WriteLine("eng English     lav Latvian     tur Turkish");
+					Console.WriteLine("est Estonian    lit Lithuanian  ukr Ukrainian");
+					Console.WriteLine("fin Finnish     mac Macedonian  vie Vietnamese");
+					break;
+			}
 		}
 
 		static bool ProcessFile(string fileName)
@@ -174,7 +230,7 @@ namespace srtDownload
 				Log("Processing file {0}...", fileName);
 
 				EpisodeSearchQuery query = new EpisodeSearchQuery(name, season, episode, null);
-				query.LanguageCodes = new string[] { "eng" };
+				query.LanguageCodes = new string[] { language };
 
 				foreach (ISubtitleDownloader downloader in downloaders)
 					try
