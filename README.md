@@ -11,17 +11,17 @@ srtDownload has a couple of options when you use it from the command line:
 	Usage: srtDownload.exe [options...] <directory>
 	Options:
 	 -v, --verbose     Shows more information, otherwise nothing is output (cron
-			   mode)
+	                   mode)
 	 -s, --state       Path of state file (remembers when files were scanned)
 	 -g, --giveupdays  The number of days after which the program gives up getting
-			   the subtitle and writes a .nosrt file.
+	                   the subtitle and writes a .nosrt file.
 	 -l, --language    The subtitle language requested (defaults to "eng").
 	 -d, --downloaders Comma-separated list of downloaders to use.
 	 -i, --ignore      Path of file containing ignored shows.
-			   A text file with a show name on each line. The name is the
-			   part of the the filename up to the season/episode id.
-			   E.g. "Criminal.Minds.S08E07.HDTV.x264-LOL.mp4" will be
-			   ignored with a line of "Criminal Minds" in the file.
+	                   A text file with a show name on each line. The name is the
+	                   part of the the filename up to the season/episode id.
+	                   E.g. "Criminal.Minds.S08E07.HDTV.x264-LOL.mp4" will be
+	                   ignored with a line of "Criminal Minds" in the file.
 	 -h, --help        [|downloaders|languages] Show Help.
 
 At the moment it only downloads english subtitles. It would be pretty easy to add an option to select what language(s) to download. Let me know if you would like that.
