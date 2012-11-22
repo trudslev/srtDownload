@@ -24,8 +24,6 @@ srtDownload has a couple of options when you use it from the command line:
 	                   ignored with a line of "Criminal Minds" in the file.
 	 -h, --help        [|downloaders|languages] Show Help.
 
-At the moment it only downloads english subtitles. It would be pretty easy to add an option to select what language(s) to download. Let me know if you would like that.
-
 SubtitleDownloader.dll
 ----------------------
 
