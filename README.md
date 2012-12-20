@@ -1,7 +1,7 @@
 srtDownload
 ===========
 
-A simple command line program (for any platform using either Microsoft .NET or mono)
+A simple command line program (for any platform using either Microsoft .NET or mono) for downloading subtitles to scene releases of TV shows.
 
 Usage
 -----
