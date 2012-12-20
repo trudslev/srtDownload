@@ -28,3 +28,8 @@ SubtitleDownloader.dll
 ----------------------
 
 Subtitle downloader uses the scraper library created by sekotin, which can be found at https://www.assembla.com/spaces/subtitledownloader/wiki. If you use this program, you should go make a donation to him, since this program would not be possible without it.
+
+Binaries
+--------
+
+Compiled binaries can be downloaded here: http://www.tanis.dk/releases/srtDownload/
